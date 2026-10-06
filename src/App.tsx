@@ -24,6 +24,8 @@ function AppContent() {
   const { loadFiles, isLoading, error } = useSlideLoader();
   const speech = useSpeechEngine();
   const lastProcessedRef = useRef<string>('');
+  const cooldownRef = useRef<number>(0);
+  const COMMAND_COOLDOWN_MS = 800;
 
   const handleFilesSelected = useCallback(
     async (files: File[]) => {
@@ -69,12 +71,18 @@ function AppContent() {
       if (speech.transcript === lastProcessedRef.current) return;
       lastProcessedRef.current = speech.transcript;
 
-      const command = parseCommand(speech.transcript);
+      const now = Date.now();
+      if (now - cooldownRef.current < COMMAND_COOLDOWN_MS) return;
+
+      const command = parseCommand(speech.transcript, {
+        confidence: speech.confidence,
+      });
       if (command) {
+        cooldownRef.current = now;
         dispatchCommand(command);
       }
     }
-  }, [speech.transcript, speech.isFinal, dispatchCommand]);
+  }, [speech.transcript, speech.isFinal, speech.confidence, dispatchCommand]);
 
   useEffect(() => {
     if (state.lastCommand) {

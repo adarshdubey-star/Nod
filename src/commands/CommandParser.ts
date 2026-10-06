@@ -1,39 +1,97 @@
 import type { Command } from '../types';
 import { wordToNumber } from '../utils/numberWords';
 
-const NEXT_PATTERNS =
-  /\b(next|next\s+slide|forward|move\s+forward|go\s+forward|advance)\b/i;
+/* ────────────────────────────────────────────────
+ *  Wake-word: optionally prefix any command with
+ *  "nod" or "hey nod" for explicit activation.
+ *  When wake-word is present, confidence threshold
+ *  is lowered because intent is unambiguous.
+ * ──────────────────────────────────────────────── */
+const WAKE_PREFIX = /^(?:hey\s+)?nod[\s,]+/i;
 
-const PREV_PATTERNS =
-  /\b(previous|prev|back|go\s+back|move\s+back|last\s+one|before)\b/i;
+/* ────────────────────────────────────────────────
+ *  Pattern tiers:
+ *    STRONG  — unambiguous keywords, fine on their own
+ *    PHRASE  — need 2+ word phrases to avoid false positives
+ *
+ *  Every pattern is wrapped in \b…\b and tested
+ *  against the *stripped* transcript (wake-word removed).
+ * ──────────────────────────────────────────────── */
 
-const FIRST_PATTERNS =
-  /\b(first\s+slide|beginning|start|go\s+to\s+(?:the\s+)?start|go\s+to\s+(?:the\s+)?beginning)\b/i;
+// ── NEXT ──
+const NEXT_STRONG = /\b(next(?:\s+slide)?|advance)\b/i;
+const NEXT_PHRASE = /\b(move\s+forward|go\s+forward|step\s+forward)\b/i;
 
-const LAST_PATTERNS =
-  /\b(last\s+slide|end|go\s+to\s+(?:the\s+)?end|final\s+slide)\b/i;
+// ── PREVIOUS ──
+const PREV_STRONG = /\b(previous(?:\s+slide)?|prev(?:\s+slide)?)\b/i;
+const PREV_PHRASE = /\b(go\s+back(?:\s+one)?|move\s+back|step\s+back|one\s+back)\b/i;
 
+// ── FIRST ──
+const FIRST_PATTERN =
+  /\b(first\s+slide|go\s+to\s+(?:the\s+)?(?:start|beginning|first)|start\s+over)\b/i;
+
+// ── LAST ──
+const LAST_PATTERN =
+  /\b(last\s+slide|final\s+slide|go\s+to\s+(?:the\s+)?end)\b/i;
+
+// ── GOTO ──
 const GOTO_PATTERNS = [
-  /(?:go\s+to|jump\s+to|show|open|switch\s+to)\s+(?:slide\s+)?(.+)/i,
-  /slide\s+(?:number\s+)?(.+)/i,
+  /\b(?:go\s+to|jump\s+to|switch\s+to|show)\s+(?:slide\s+)?(.+)/i,
+  /\bslide\s+(?:number\s+)?(.+)/i,
 ];
 
-export function parseCommand(transcript: string): Command | null {
-  const text = transcript.toLowerCase().trim();
+/* ────────────────────────────────────────────────
+ *  Confidence thresholds
+ * ──────────────────────────────────────────────── */
+const CONF_DEFAULT = 0.72;     // minimum without wake-word
+const CONF_WITH_WAKE = 0.25;   // very low when user said "Nod, …"
+const CONF_STRONG_WORD = 0.60; // strong keywords get a small discount
+
+export interface ParseOptions {
+  /** Confidence from the Speech API (0–1). Defaults to 1 (always accept). */
+  confidence?: number;
+}
+
+export interface ParseResult {
+  command: Command;
+  /** Whether the wake-word "Nod" was used */
+  hadWakeWord: boolean;
+}
+
+export function parseCommand(
+  transcript: string,
+  opts: ParseOptions = {},
+): Command | null {
+  const raw = transcript.trim();
+  if (!raw || raw.length < 2) return null;
+
+  const confidence = opts.confidence ?? 1;
+
+  // Strip wake-word prefix if present
+  const hasWake = WAKE_PREFIX.test(raw);
+  const text = (hasWake ? raw.replace(WAKE_PREFIX, '') : raw)
+    .toLowerCase()
+    .trim();
 
   if (!text) return null;
 
-  if (FIRST_PATTERNS.test(text)) {
+  const minConf = hasWake ? CONF_WITH_WAKE : CONF_DEFAULT;
+  const minConfStrong = hasWake ? CONF_WITH_WAKE : CONF_STRONG_WORD;
+
+  // ── FIRST (test before GOTO to avoid "go to start" matching goto) ──
+  if (FIRST_PATTERN.test(text) && confidence >= minConf) {
     return { type: 'first' };
   }
 
-  if (LAST_PATTERNS.test(text)) {
+  // ── LAST ──
+  if (LAST_PATTERN.test(text) && confidence >= minConf) {
     return { type: 'last' };
   }
 
+  // ── GOTO ──
   for (const pattern of GOTO_PATTERNS) {
     const match = text.match(pattern);
-    if (match) {
+    if (match && confidence >= minConf) {
       const numText = match[1].trim();
       const num = wordToNumber(numText);
       if (num !== null && num > 0) {
@@ -42,11 +100,19 @@ export function parseCommand(transcript: string): Command | null {
     }
   }
 
-  if (NEXT_PATTERNS.test(text)) {
+  // ── NEXT ──
+  if (NEXT_STRONG.test(text) && confidence >= minConfStrong) {
+    return { type: 'next' };
+  }
+  if (NEXT_PHRASE.test(text) && confidence >= minConf) {
     return { type: 'next' };
   }
 
-  if (PREV_PATTERNS.test(text)) {
+  // ── PREVIOUS ──
+  if (PREV_STRONG.test(text) && confidence >= minConfStrong) {
+    return { type: 'previous' };
+  }
+  if (PREV_PHRASE.test(text) && confidence >= minConf) {
     return { type: 'previous' };
   }
 

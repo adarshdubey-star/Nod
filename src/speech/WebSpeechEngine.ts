@@ -1,6 +1,6 @@
 import type { SpeechEngine } from '../types';
 
-type TranscriptCallback = (text: string, isFinal: boolean) => void;
+type TranscriptCallback = (text: string, isFinal: boolean, confidence: number) => void;
 type ErrorCallback = (error: Error) => void;
 
 const SpeechRecognition =
@@ -33,9 +33,11 @@ export class WebSpeechEngine implements SpeechEngine {
     this.recognition.onresult = (event: any) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        const transcript = result[0].transcript.trim();
+        const alt = result[0];
+        const transcript = alt.transcript.trim();
         const isFinal = result.isFinal;
-        this.transcriptCbs.forEach((cb) => cb(transcript, isFinal));
+        const confidence: number = alt.confidence ?? 0;
+        this.transcriptCbs.forEach((cb) => cb(transcript, isFinal, confidence));
       }
     };
 

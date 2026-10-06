@@ -3,6 +3,7 @@ import { WebSpeechEngine, isSpeechRecognitionSupported } from './WebSpeechEngine
 
 interface UseSpeechEngineReturn {
   transcript: string;
+  confidence: number;
   isFinal: boolean;
   isListening: boolean;
   isSupported: boolean;
@@ -15,6 +16,7 @@ interface UseSpeechEngineReturn {
 export function useSpeechEngine(): UseSpeechEngineReturn {
   const engineRef = useRef<WebSpeechEngine | null>(null);
   const [transcript, setTranscript] = useState('');
+  const [confidence, setConfidence] = useState(0);
   const [isFinal, setIsFinal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,9 +28,10 @@ export function useSpeechEngine(): UseSpeechEngineReturn {
     const engine = new WebSpeechEngine();
     engineRef.current = engine;
 
-    engine.onTranscript((text, final) => {
+    engine.onTranscript((text, final, conf) => {
       setTranscript(text);
       setIsFinal(final);
+      setConfidence(conf);
     });
 
     engine.onError((err) => {
@@ -68,6 +71,7 @@ export function useSpeechEngine(): UseSpeechEngineReturn {
 
   return {
     transcript,
+    confidence,
     isFinal,
     isListening,
     isSupported,
