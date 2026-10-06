@@ -13,7 +13,6 @@ import SlideNavigator from './components/SlideNavigator';
 import PresenterToolbar from './components/PresenterToolbar';
 import DinoMascot from './components/DinoMascot';
 import VoiceIndicator from './components/VoiceIndicator';
-import CommandFeedback from './components/CommandFeedback';
 import ErrorBoundary from './components/ErrorBoundary';
 import BrowserCheck from './components/BrowserCheck';
 import type { Command } from './types';
@@ -174,9 +173,8 @@ function AppContent() {
 
       {/* Bottom bar */}
       <div className="flex items-center gap-4 px-4 py-2">
-        {/* Left: Dino mascot + voice */}
+        {/* Left: mascot + voice status */}
         <div className="relative flex items-center gap-3">
-          <CommandFeedback command={state.lastCommand} />
           <div className="-my-3">
             <DinoMascot
               lastCommand={state.lastCommand}
@@ -187,7 +185,6 @@ function AppContent() {
           </div>
           <VoiceIndicator
             isListening={speech.isListening}
-            transcript={speech.transcript}
           />
         </div>
 

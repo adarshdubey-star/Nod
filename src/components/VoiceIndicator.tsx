@@ -1,17 +1,13 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface VoiceIndicatorProps {
   isListening: boolean;
-  transcript: string;
 }
 
-export default function VoiceIndicator({
-  isListening,
-  transcript,
-}: VoiceIndicatorProps) {
+export default function VoiceIndicator({ isListening }: VoiceIndicatorProps) {
   return (
-    <div className="flex items-center gap-2 overflow-hidden">
-      {/* Mic status dot */}
+    <div className="flex items-center gap-2">
+      {/* Mic status dot — green pulse when listening, dim when off */}
       <div className="relative flex h-3 w-3 flex-shrink-0 items-center justify-center">
         <div
           className={`h-2 w-2 rounded-full transition-colors ${
@@ -26,31 +22,6 @@ export default function VoiceIndicator({
           />
         )}
       </div>
-
-      {/* Live transcript */}
-      <AnimatePresence mode="wait">
-        {transcript ? (
-          <motion.span
-            key={transcript}
-            className="max-w-xs truncate text-xs text-nod-muted"
-            initial={{ opacity: 0, x: -5 }}
-            animate={{ opacity: 0.8, x: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {transcript}
-          </motion.span>
-        ) : (
-          <motion.span
-            key="status"
-            className="text-xs text-nod-muted/50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            {isListening ? 'Listening…' : 'Mic off'}
-          </motion.span>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
