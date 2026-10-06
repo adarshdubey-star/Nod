@@ -5,6 +5,8 @@ interface UseSpeechEngineReturn {
   transcript: string;
   confidence: number;
   isFinal: boolean;
+  /** Monotonically increasing counter — bumps on every final result */
+  resultId: number;
   isListening: boolean;
   isSupported: boolean;
   error: string | null;
@@ -18,6 +20,7 @@ export function useSpeechEngine(): UseSpeechEngineReturn {
   const [transcript, setTranscript] = useState('');
   const [confidence, setConfidence] = useState(0);
   const [isFinal, setIsFinal] = useState(false);
+  const [resultId, setResultId] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isSupported = isSpeechRecognitionSupported();
@@ -32,6 +35,9 @@ export function useSpeechEngine(): UseSpeechEngineReturn {
       setTranscript(text);
       setIsFinal(final);
       setConfidence(conf);
+      if (final) {
+        setResultId((prev) => prev + 1);
+      }
     });
 
     engine.onError((err) => {
@@ -73,6 +79,7 @@ export function useSpeechEngine(): UseSpeechEngineReturn {
     transcript,
     confidence,
     isFinal,
+    resultId,
     isListening,
     isSupported,
     error,

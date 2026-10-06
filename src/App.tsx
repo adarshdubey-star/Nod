@@ -23,7 +23,7 @@ function AppContent() {
   const dispatch = usePresentationDispatch();
   const { loadFiles, isLoading, error } = useSlideLoader();
   const speech = useSpeechEngine();
-  const lastProcessedRef = useRef<string>('');
+  const lastResultIdRef = useRef<number>(-1);
   const cooldownRef = useRef<number>(0);
   const COMMAND_COOLDOWN_MS = 800;
 
@@ -67,9 +67,8 @@ function AppContent() {
   );
 
   useEffect(() => {
-    if (speech.isFinal && speech.transcript) {
-      if (speech.transcript === lastProcessedRef.current) return;
-      lastProcessedRef.current = speech.transcript;
+    if (speech.isFinal && speech.transcript && speech.resultId !== lastResultIdRef.current) {
+      lastResultIdRef.current = speech.resultId;
 
       const now = Date.now();
       if (now - cooldownRef.current < COMMAND_COOLDOWN_MS) return;
@@ -82,7 +81,7 @@ function AppContent() {
         dispatchCommand(command);
       }
     }
-  }, [speech.transcript, speech.isFinal, speech.confidence, dispatchCommand]);
+  }, [speech.resultId, speech.isFinal, speech.transcript, speech.confidence, dispatchCommand]);
 
   useEffect(() => {
     if (state.lastCommand) {
