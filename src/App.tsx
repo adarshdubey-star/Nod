@@ -11,7 +11,7 @@ import UploadScreen from './components/UploadScreen';
 import SlideViewer from './components/SlideViewer';
 import SlideNavigator from './components/SlideNavigator';
 import PresenterToolbar from './components/PresenterToolbar';
-import NodOrb from './components/NodOrb';
+import DinoMascot from './components/DinoMascot';
 import VoiceIndicator from './components/VoiceIndicator';
 import CommandFeedback from './components/CommandFeedback';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -167,14 +167,15 @@ function AppContent() {
 
       {/* Bottom bar */}
       <div className="flex items-center gap-4 px-4 py-2">
-        {/* Left: Nod Orb + voice */}
+        {/* Left: Dino mascot + voice */}
         <div className="relative flex items-center gap-3">
           <CommandFeedback command={state.lastCommand} />
-          <div className="-my-4">
-            <NodOrb
+          <div className="-my-3">
+            <DinoMascot
               lastCommand={state.lastCommand}
               isListening={speech.isListening}
               gotoSlideNumber={gotoSlideNumber}
+              size={100}
             />
           </div>
           <VoiceIndicator

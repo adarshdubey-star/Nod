@@ -1,5 +1,7 @@
-import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, type DragEvent, type ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DinoMascot from './DinoMascot';
+import type { Command } from '../types';
 
 interface UploadScreenProps {
   onFilesSelected: (files: File[]) => void;
@@ -19,7 +21,14 @@ export default function UploadScreen({
   error,
 }: UploadScreenProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [heroCommand, setHeroCommand] = useState<Command | null>({ type: 'first' });
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Brief greeting bounce when the home screen loads
+  useEffect(() => {
+    const t = setTimeout(() => setHeroCommand(null), 900);
+    return () => clearTimeout(t);
+  }, []);
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
@@ -47,41 +56,38 @@ export default function UploadScreen({
   }
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center p-8">
-      {/* Logo & title */}
+    <div className="flex h-full w-full flex-col items-center justify-center overflow-y-auto p-8">
+      {/* Hero: Dino mascot */}
       <motion.div
-        className="mb-8 text-center"
+        className="mb-2 flex flex-col items-center text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Nod Orb mini logo */}
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
-          <div className="relative h-14 w-14">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-nod-orb-start to-nod-orb-end opacity-40 blur-xl" />
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-nod-orb-start to-nod-orb-end shadow-lg">
-              <svg width="28" height="20" viewBox="0 0 28 20">
-                <circle cx="9" cy="9" r="3" fill="#e2e8f0" />
-                <circle cx="19" cy="9" r="3" fill="#e2e8f0" />
-                <circle cx="9.8" cy="8.5" r="1.3" fill="#0f1117" />
-                <circle cx="19.8" cy="8.5" r="1.3" fill="#0f1117" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight text-nod-text">
+        <DinoMascot
+          lastCommand={heroCommand}
+          isListening={false}
+          size={220}
+          showBadge={false}
+        />
+
+        <h1 className="mt-2 text-5xl font-black tracking-tight text-nod-text">
           Nod
         </h1>
-        <p className="mt-2 text-lg text-nod-muted">
+        <p className="mt-2 text-base tracking-wide text-nod-muted">
           Voice-controlled presentations
+        </p>
+        <p className="mt-1 text-sm text-nod-muted/70">
+          Say <span className="text-amber-300">“next”</span> or{' '}
+          <span className="text-amber-300">“back”</span> — Nod will guide you
         </p>
       </motion.div>
 
       {/* Drop zone */}
       <motion.div
-        className={`relative w-full max-w-xl cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-colors ${
+        className={`relative mt-6 w-full max-w-xl cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-colors ${
           isDragging
-            ? 'border-nod-orb-start bg-nod-orb-start/10'
+            ? 'border-amber-400 bg-amber-400/10'
             : 'border-nod-border bg-nod-surface/50 hover:border-nod-muted'
         }`}
         onDragOver={handleDragOver}
@@ -112,8 +118,8 @@ export default function UploadScreen({
               exit={{ opacity: 0 }}
               className="flex flex-col items-center gap-4"
             >
-              <div className="h-10 w-10 animate-spin rounded-full border-2 border-nod-orb-start border-t-transparent" />
-              <p className="text-nod-muted">Loading presentation…</p>
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+              <p className="text-nod-muted">Loading your slides…</p>
             </motion.div>
           ) : (
             <motion.div
@@ -122,7 +128,7 @@ export default function UploadScreen({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div className="mb-4 text-4xl">
+              <div className="mb-4 text-4xl text-amber-300">
                 {isDragging ? '✦' : '↑'}
               </div>
               <p className="text-lg font-medium text-nod-text">
@@ -155,7 +161,6 @@ export default function UploadScreen({
         ))}
       </motion.div>
 
-      {/* Error display */}
       <AnimatePresence>
         {error && (
           <motion.p
