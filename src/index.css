@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-nod-bg: #0f1117;
+  --color-nod-surface: #1a1d27;
+  --color-nod-orb-start: #6366f1;
+  --color-nod-orb-end: #8b5cf6;
+  --color-nod-glow: #818cf8;
+  --color-nod-success: #38bdf8;
+  --color-nod-text: #e2e8f0;
+  --color-nod-muted: #64748b;
+  --color-nod-amber: #f59e0b;
+  --color-nod-border: #2a2d3a;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-nod-bg);
+  color: var(--color-nod-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
