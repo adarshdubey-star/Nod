@@ -22,9 +22,9 @@ export default function UploadScreen({
 }: UploadScreenProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [heroCommand, setHeroCommand] = useState<Command | null>({ type: 'first' });
+  const [showInfo, setShowInfo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Brief greeting bounce when the home screen loads
   useEffect(() => {
     const t = setTimeout(() => setHeroCommand(null), 900);
     return () => clearTimeout(t);
@@ -57,7 +57,7 @@ export default function UploadScreen({
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center overflow-y-auto p-8">
-      {/* Hero: Dino mascot */}
+      {/* Hero */}
       <motion.div
         className="mb-2 flex flex-col items-center text-center"
         initial={{ opacity: 0, y: -20 }}
@@ -74,13 +74,60 @@ export default function UploadScreen({
         <h1 className="mt-2 text-5xl font-black tracking-tight text-nod-text">
           Nod
         </h1>
-        <p className="mt-2 text-base tracking-wide text-nod-muted">
-          Voice-controlled presentations
-        </p>
-        <p className="mt-1 text-sm text-nod-muted/70">
-          Say <span className="text-amber-300">“next”</span> or{' '}
-          <span className="text-amber-300">“back”</span> — Nod will guide you
-        </p>
+
+        <div className="relative mt-2 flex items-center gap-2">
+          <p className="text-base tracking-wide text-nod-muted">
+            Voice-controlled presentations
+          </p>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowInfo((v) => !v); }}
+            className="flex h-5 w-5 items-center justify-center rounded-full border border-nod-muted/40 text-[11px] font-semibold text-nod-muted/70 transition-colors hover:border-amber-400 hover:text-amber-300"
+            aria-label="How it works"
+          >
+            i
+          </button>
+
+          <AnimatePresence>
+            {showInfo && (
+              <motion.div
+                className="absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 rounded-xl border border-nod-border bg-nod-surface/95 p-4 text-left text-sm shadow-xl backdrop-blur"
+                initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className="font-medium text-nod-text">How it works</p>
+                <ul className="mt-2 space-y-1.5 text-xs text-nod-muted">
+                  <li>Upload a PDF, PPTX, or images</li>
+                  <li>Toggle mic and navigate with your voice</li>
+                  <li>
+                    Say{' '}
+                    <span className="rounded bg-amber-400/15 px-1 text-amber-300">"next"</span>
+                    {' / '}
+                    <span className="rounded bg-amber-400/15 px-1 text-amber-300">"previous"</span>
+                    {' / '}
+                    <span className="rounded bg-amber-400/15 px-1 text-amber-300">"slide 5"</span>
+                  </li>
+                  <li>Arrow keys, Space (mic), F (fullscreen)</li>
+                  <li>
+                    Prefix with{' '}
+                    <span className="rounded bg-amber-400/15 px-1 text-amber-300">"Nod, ..."</span>
+                    {' '}in noisy rooms
+                  </li>
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setShowInfo(false)}
+                  className="mt-3 text-xs text-nod-muted/50 hover:text-nod-muted"
+                >
+                  Got it
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </motion.div>
 
       {/* Drop zone */}
@@ -119,7 +166,7 @@ export default function UploadScreen({
               className="flex flex-col items-center gap-4"
             >
               <div className="h-10 w-10 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
-              <p className="text-nod-muted">Loading your slides…</p>
+              <p className="text-nod-muted">Loading your slides...</p>
             </motion.div>
           ) : (
             <motion.div
@@ -129,7 +176,7 @@ export default function UploadScreen({
               exit={{ opacity: 0 }}
             >
               <div className="mb-4 text-4xl text-amber-300">
-                {isDragging ? '✦' : '↑'}
+                {isDragging ? '\u2726' : '\u2191'}
               </div>
               <p className="text-lg font-medium text-nod-text">
                 {isDragging
